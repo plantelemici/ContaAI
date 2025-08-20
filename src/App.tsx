@@ -16,6 +16,7 @@ import { useContracts } from './hooks/useContracts';
 import { useBankReconciliation } from './hooks/useBankReconciliation';
 import { ContractsManager } from './components/ContractsManager';
 import { BankReconciliationManager } from './components/BankReconciliationManager';
+import { DateFilter } from './components/DateFilter';
 
 function App() {
   const [activeView, setActiveView] = useState('dashboard');
@@ -100,10 +101,16 @@ function App() {
         const filteredAndSortedDocuments = documents
           .filter(doc => {
             if (categoryFilter !== 'all' && doc.category !== categoryFilter) return false;
-            if (dateFilter && doc.documentDate) {
-              const docDate = new Date(doc.documentDate.split('.').reverse().join('-'));
-              const filterDate = new Date(dateFilter);
-              return docDate.toDateString() === filterDate.toDateString();
+            if (dateFilter) {
+              const [year, month] = dateFilter.split('-');
+              if (doc.documentDate) {
+                const docDate = new Date(doc.documentDate.split('.').reverse().join('-'));
+                const docYear = docDate.getFullYear().toString();
+                const docMonth = (docDate.getMonth() + 1).toString().padStart(2, '0');
+                
+                if (year && docYear !== year) return false;
+                if (month && docMonth !== month) return false;
+              }
             }
             return true;
           })
@@ -146,7 +153,7 @@ function App() {
             </div>
             
             {/* Filter and Sort Controls */}
-            <div className="flex items-center justify-between mb-6 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
+            <div className="flex items-center justify-between mb-6 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex-wrap gap-4">
               <div className="flex items-center gap-4">
                 <select 
                   value={categoryFilter}
@@ -171,25 +178,19 @@ function App() {
                   <option value="amount-high">Sumă mare</option>
                   <option value="amount-low">Sumă mică</option>
                 </select>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  <input
-                    type="date"
-                    value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value)}
-                    className="px-3 py-2 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Filtrează după dată"
-                  />
-                  {dateFilter && (
-                    <button
-                      onClick={() => setDateFilter('')}
-                      className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-                      title="Șterge filtrul de dată"
-                    >
-                      <X className="w-4 h-4 text-gray-400" />
-                    </button>
-                  )}
-                </div>
+                <DateFilter
+                  selectedMonth={dateFilter.split('-')[1] || ''}
+                  selectedYear={dateFilter.split('-')[0] || ''}
+                  onMonthChange={(month) => {
+                    const year = dateFilter.split('-')[0] || new Date().getFullYear().toString();
+                    setDateFilter(month ? `${year}-${month}` : year ? `${year}-` : '');
+                  }}
+                  onYearChange={(year) => {
+                    const month = dateFilter.split('-')[1] || '';
+                    setDateFilter(year ? `${year}-${month}` : month ? `-${month}` : '');
+                  }}
+                  onClear={() => setDateFilter('')}
+                />
               </div>
               <div className="text-sm text-gray-400">
                 {filteredAndSortedDocuments.length} din {documents.length} documente

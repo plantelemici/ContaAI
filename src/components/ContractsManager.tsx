@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { Contract } from '../types/contracts';
 import { ContractCard } from './ContractCard';
 import { FileUpload } from './FileUpload';
+import { DateFilter } from './DateFilter';
 import { 
   FileText, 
   Plus, 
   Filter,
-  Calendar,
   X,
   TrendingUp,
   AlertTriangle,
@@ -30,7 +30,8 @@ export const ContractsManager: React.FC<ContractsManagerProps> = ({
   const [showUpload, setShowUpload] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('');
+  const [monthFilter, setMonthFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState('');
   const [sortBy, setSortBy] = useState('newest');
 
   const activeContracts = contracts.filter(c => c.status === 'active').length;
@@ -45,11 +46,13 @@ export const ContractsManager: React.FC<ContractsManagerProps> = ({
     .filter(contract => {
       if (statusFilter !== 'all' && contract.status !== statusFilter) return false;
       if (typeFilter !== 'all' && contract.type !== typeFilter) return false;
-      if (dateFilter) {
-        const filterDate = new Date(dateFilter);
-        const contractStart = new Date(contract.startDate);
-        const contractEnd = new Date(contract.endDate);
-        return filterDate >= contractStart && filterDate <= contractEnd;
+      if (monthFilter || yearFilter) {
+        const contractDate = new Date(contract.createdAt);
+        const contractYear = contractDate.getFullYear().toString();
+        const contractMonth = (contractDate.getMonth() + 1).toString().padStart(2, '0');
+        
+        if (yearFilter && contractYear !== yearFilter) return false;
+        if (monthFilter && contractMonth !== monthFilter) return false;
       }
       return true;
     })
@@ -138,7 +141,7 @@ export const ContractsManager: React.FC<ContractsManagerProps> = ({
       </div>
 
       {/* Filters */}
-      <div className="flex items-center justify-between mb-6 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
+      <div className="flex items-center justify-between mb-6 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <select 
             value={statusFilter}
@@ -178,25 +181,16 @@ export const ContractsManager: React.FC<ContractsManagerProps> = ({
             <option value="end-date">Data expirării</option>
           </select>
 
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-400" />
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="px-3 py-2 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="Filtrează după dată"
-            />
-            {dateFilter && (
-              <button
-                onClick={() => setDateFilter('')}
-                className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-                title="Șterge filtrul de dată"
-              >
-                <X className="w-4 h-4 text-gray-400" />
-              </button>
-            )}
-          </div>
+          <DateFilter
+            selectedMonth={monthFilter}
+            selectedYear={yearFilter}
+            onMonthChange={setMonthFilter}
+            onYearChange={setYearFilter}
+            onClear={() => {
+              setMonthFilter('');
+              setYearFilter('');
+            }}
+          />
         </div>
         <div className="text-sm text-gray-400">
           {filteredAndSortedContracts.length} din {contracts.length} contracte
@@ -252,7 +246,8 @@ export const ContractsManager: React.FC<ContractsManagerProps> = ({
               onClick={() => {
                 setStatusFilter('all');
                 setTypeFilter('all');
-                setDateFilter('');
+                setMonthFilter('');
+                setYearFilter('');
                 setSortBy('newest');
               }}
               className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl text-white font-medium hover:from-purple-600 hover:to-blue-700 transition-all duration-300"

@@ -3,11 +3,11 @@ import { BankStatement, BankTransaction, BankReconciliation } from '../types/ban
 import { BankStatementCard } from './BankStatementCard';
 import { ReconciliationCard } from './ReconciliationCard';
 import { FileUpload } from './FileUpload';
+import { DateFilter } from './DateFilter';
 import { 
   CreditCard, 
   Plus, 
   Filter,
-  Calendar,
   X,
   TrendingUp,
   AlertTriangle,
@@ -48,17 +48,21 @@ export const BankReconciliationManager: React.FC<BankReconciliationManagerProps>
   const [activeTab, setActiveTab] = useState<'statements' | 'reconciliations' | 'transactions'>('statements');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('');
+  const [monthFilter, setMonthFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState('');
   const [sortBy, setSortBy] = useState('newest');
 
   const filteredTransactions = bankTransactions
     .filter(transaction => {
       if (statusFilter !== 'all' && transaction.status !== statusFilter) return false;
       if (typeFilter !== 'all' && transaction.type !== typeFilter) return false;
-      if (dateFilter) {
-        const filterDate = new Date(dateFilter);
+      if (monthFilter || yearFilter) {
         const transactionDate = new Date(transaction.date);
-        return transactionDate.toDateString() === filterDate.toDateString();
+        const transactionYear = transactionDate.getFullYear().toString();
+        const transactionMonth = (transactionDate.getMonth() + 1).toString().padStart(2, '0');
+        
+        if (yearFilter && transactionYear !== yearFilter) return false;
+        if (monthFilter && transactionMonth !== monthFilter) return false;
       }
       return true;
     })
@@ -188,7 +192,7 @@ export const BankReconciliationManager: React.FC<BankReconciliationManagerProps>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center justify-between mb-6 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
+      <div className="flex items-center justify-between mb-6 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <select 
             value={statusFilter}
@@ -246,23 +250,16 @@ export const BankReconciliationManager: React.FC<BankReconciliationManagerProps>
             )}
           </select>
 
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-400" />
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="px-3 py-2 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {dateFilter && (
-              <button
-                onClick={() => setDateFilter('')}
-                className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-              >
-                <X className="w-4 h-4 text-gray-400" />
-              </button>
-            )}
-          </div>
+          <DateFilter
+            selectedMonth={monthFilter}
+            selectedYear={yearFilter}
+            onMonthChange={setMonthFilter}
+            onYearChange={setYearFilter}
+            onClear={() => {
+              setMonthFilter('');
+              setYearFilter('');
+            }}
+          />
         </div>
         <div className="text-sm text-gray-400">
           {activeTab === 'transactions' && `${filteredTransactions.length} din ${bankTransactions.length} tranzacții`}
@@ -372,7 +369,8 @@ export const BankReconciliationManager: React.FC<BankReconciliationManagerProps>
               onClick={() => {
                 setStatusFilter('all');
                 setTypeFilter('all');
-                setDateFilter('');
+                setMonthFilter('');
+                setYearFilter('');
                 setSortBy('newest');
               }}
               className="px-6 py-3 bg-gradient-to-r from-blue-500 to-green-600 rounded-xl text-white font-medium hover:from-blue-600 hover:to-green-700 transition-all duration-300"

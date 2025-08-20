@@ -4,6 +4,7 @@ import { TaxReport } from '../types/accounting';
 import { Contract } from '../types/contracts';
 import { BankStatement } from '../types/banking';
 import { Invoice, Product } from '../types/accounting';
+import { DateFilter } from './DateFilter';
 import { BarChart3, TrendingUp, TrendingDown, FileText, Download, Calendar, DollarSign, PieChart, Activity, Target } from 'lucide-react';
 
 interface ReportsManagerProps {
@@ -25,13 +26,28 @@ export const ReportsManager: React.FC<ReportsManagerProps> = ({
   products,
   onGenerateReport 
 }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState('2024');
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [reportType, setReportType] = useState<'monthly' | 'quarterly' | 'annual'>('monthly');
   const [activeReportTab, setActiveReportTab] = useState<'financial' | 'contracts' | 'inventory' | 'banking'>('financial');
 
   const currentYear = new Date().getFullYear();
-  const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-  const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+  
+  // Filter transactions based on selected period
+  const filteredTransactions = transactions.filter(t => {
+    if (selectedYear) {
+      const transactionYear = t.date.getFullYear().toString();
+      if (transactionYear !== selectedYear) return false;
+    }
+    if (selectedMonth) {
+      const transactionMonth = (t.date.getMonth() + 1).toString().padStart(2, '0');
+      if (transactionMonth !== selectedMonth) return false;
+    }
+    return true;
+  });
+  
+  const totalIncome = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+  const totalExpenses = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
   const netProfit = totalIncome - totalExpenses;
 
   // Contract analytics
@@ -57,8 +73,8 @@ export const ReportsManager: React.FC<ReportsManagerProps> = ({
 
   const monthlyData = Array.from({ length: 12 }, (_, i) => {
     const month = i + 1;
-    const monthTransactions = transactions.filter(t => 
-      t.date.getMonth() + 1 === month && t.date.getFullYear() === currentYear
+    const monthTransactions = filteredTransactions.filter(t => 
+      t.date.getMonth() + 1 === month && t.date.getFullYear() === parseInt(selectedYear || currentYear.toString())
     );
     const income = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
     const expenses = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
@@ -78,7 +94,7 @@ export const ReportsManager: React.FC<ReportsManagerProps> = ({
     { id: 'banking', label: 'Bancar', icon: Target }
   ];
 
-  const categoryBreakdown = transactions.reduce((acc, transaction) => {
+  const categoryBreakdown = filteredTransactions.reduce((acc, transaction) => {
     const category = transaction.category;
     if (!acc[category]) {
       acc[category] = { income: 0, expenses: 0 };
@@ -96,9 +112,27 @@ export const ReportsManager: React.FC<ReportsManagerProps> = ({
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white mb-2">Rapoarte</h2>
-          <p className="text-gray-400">Analize financiare și rapoarte fiscale</p>
+          <p className="text-gray-400">
+            Analize financiare și rapoarte fiscale
+            {(selectedMonth || selectedYear) && (
+              <span className="ml-2 text-blue-400">
+                - {selectedMonth ? `${getMonthName(selectedMonth)} ` : ''}{selectedYear || 'Toate anii'}
+              </span>
+            )}
+          </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center flex-wrap">
+          <DateFilter
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onMonthChange={setSelectedMonth}
+            onYearChange={setSelectedYear}
+            onClear={() => {
+              setSelectedMonth('');
+              setSelectedYear('');
+            }}
+            showClear={!!(selectedMonth || selectedYear)}
+          />
           <select
             value={reportType}
             onChange={(e) => setReportType(e.target.value as 'monthly' | 'quarterly' | 'annual')}
@@ -109,7 +143,7 @@ export const ReportsManager: React.FC<ReportsManagerProps> = ({
             <option value="annual">Anual</option>
           </select>
           <button
-            onClick={() => onGenerateReport(selectedPeriod, reportType)}
+            onClick={() => onGenerateReport(`${selectedYear || 'all'}-${selectedMonth || 'all'}`, reportType)}
             className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl text-white font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 flex items-center gap-2"
           >
             <FileText className="w-4 h-4" />
@@ -339,7 +373,7 @@ export const ReportsManager: React.FC<ReportsManagerProps> = ({
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
               <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5" />
-                Evoluție Lunară {currentYear}
+                Evoluție Lunară {selectedYear || currentYear}
               </h3>
               <div className="space-y-3">
                 {monthlyData.map((data, index) => (
@@ -563,4 +597,12 @@ export const ReportsManager: React.FC<ReportsManagerProps> = ({
       </div>
     </div>
   );
+};
+
+const getMonthName = (month: string): string => {
+  const months = [
+    '', 'Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie',
+    'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'
+  ];
+  return months[parseInt(month)] || '';
 };
