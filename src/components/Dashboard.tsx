@@ -3,7 +3,39 @@ import { Document, Transaction } from '../types';
 import { Contract } from '../types/contracts';
 import { BankStatement, BankReconciliation } from '../types/banking';
 import { Invoice, Product, CompanySettings } from '../types/accounting';
-import { TrendingUp, TrendingDown, FileText, CreditCard, DollarSign, Users, Calendar, AlertTriangle, Package, Building, BarChart3, CheckCircle, Clock, Eye, Download, Contact as FileContract, Banknote, ShoppingCart, Target, Activity, Zap } from 'lucide-react';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  FileText, 
+  CreditCard, 
+  DollarSign, 
+  Users, 
+  Calendar, 
+  AlertTriangle, 
+  Package, 
+  Building, 
+  BarChart3, 
+  CheckCircle, 
+  Clock, 
+  Eye, 
+  Download, 
+  Contact as FileContract, 
+  Banknote, 
+  ShoppingCart, 
+  Target, 
+  Activity, 
+  Zap,
+  PieChart,
+  ArrowUp,
+  ArrowDown,
+  Percent,
+  Calculator,
+  Wallet,
+  CreditCard as Card,
+  Timer,
+  Award,
+  Briefcase
+} from 'lucide-react';
 
 interface DashboardProps {
   documents: Document[];
@@ -31,6 +63,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
   const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
   const netProfit = totalIncome - totalExpenses;
+  const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
 
   // Contract stats
   const activeContracts = contracts.filter(c => c.status === 'active').length;
@@ -49,248 +82,475 @@ export const Dashboard: React.FC<DashboardProps> = ({
   // Invoice stats
   const paidInvoices = invoices.filter(inv => inv.status === 'paid').length;
   const overdueInvoices = invoices.filter(inv => inv.status === 'overdue').length;
+  const pendingInvoices = invoices.filter(inv => inv.status === 'sent').length;
   const totalInvoiceValue = invoices.reduce((sum, inv) => sum + inv.total, 0);
+  const paidInvoiceValue = invoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.total, 0);
+  const overdueInvoiceValue = invoices.filter(inv => inv.status === 'overdue').reduce((sum, inv) => sum + inv.total, 0);
 
   // Product stats
   const lowStockProducts = products.filter(p => p.stock <= p.minStock).length;
   const totalInventoryValue = products.reduce((sum, p) => sum + (p.stock * p.unitPrice), 0);
 
-  const mainStats = [
+  // Monthly data for trend analysis
+  const currentYear = new Date().getFullYear();
+  const monthlyData = Array.from({ length: 12 }, (_, i) => {
+    const month = i + 1;
+    const monthTransactions = transactions.filter(t => 
+      t.date.getMonth() + 1 === month && t.date.getFullYear() === currentYear
+    );
+    const income = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+    const expenses = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    
+    return {
+      month: new Date(currentYear, i, 1).toLocaleDateString('ro-RO', { month: 'short' }),
+      income,
+      expenses,
+      profit: income - expenses
+    };
+  });
+
+  // Category breakdown
+  const categoryBreakdown = transactions.reduce((acc, transaction) => {
+    const category = transaction.category;
+    if (!acc[category]) {
+      acc[category] = { income: 0, expenses: 0, total: 0 };
+    }
+    if (transaction.type === 'income') {
+      acc[category].income += transaction.amount;
+    } else {
+      acc[category].expenses += transaction.amount;
+    }
+    acc[category].total = acc[category].income + acc[category].expenses;
+    return acc;
+  }, {} as Record<string, { income: number; expenses: number; total: number }>);
+
+  const topCategories = Object.entries(categoryBreakdown)
+    .sort(([,a], [,b]) => b.total - a.total)
+    .slice(0, 5);
+
+  // Financial health indicators
+  const cashFlow = totalIncome - totalExpenses;
+  const averageTransactionValue = transactions.length > 0 ? (totalIncome + totalExpenses) / transactions.length : 0;
+  const invoiceCollectionRate = totalInvoiceValue > 0 ? (paidInvoiceValue / totalInvoiceValue) * 100 : 0;
+
+  // Performance indicators
+  const performanceIndicators = [
     {
-      title: 'Venituri Totale',
-      value: `${totalIncome.toLocaleString()} RON`,
-      icon: TrendingUp,
-      color: 'text-green-400',
-      bg: 'bg-green-500/20',
-      change: '+12.5%',
-      changeColor: 'text-green-400'
+      title: 'Lichiditate',
+      value: `${cashFlow.toLocaleString()} RON`,
+      trend: cashFlow >= 0 ? 'up' : 'down',
+      color: cashFlow >= 0 ? 'text-green-400' : 'text-red-400',
+      bg: cashFlow >= 0 ? 'bg-green-500/20' : 'bg-red-500/20',
+      icon: Wallet,
+      description: 'Fluxul de numerar disponibil'
     },
     {
-      title: 'Cheltuieli Totale',
-      value: `${totalExpenses.toLocaleString()} RON`,
-      icon: TrendingDown,
-      color: 'text-red-400',
-      bg: 'bg-red-500/20',
-      change: '+8.2%',
-      changeColor: 'text-red-400'
+      title: 'Marja Profit',
+      value: `${profitMargin.toFixed(1)}%`,
+      trend: profitMargin >= 15 ? 'up' : profitMargin >= 5 ? 'stable' : 'down',
+      color: profitMargin >= 15 ? 'text-green-400' : profitMargin >= 5 ? 'text-yellow-400' : 'text-red-400',
+      bg: profitMargin >= 15 ? 'bg-green-500/20' : profitMargin >= 5 ? 'bg-yellow-500/20' : 'bg-red-500/20',
+      icon: Percent,
+      description: 'Profitabilitatea operațiunilor'
     },
     {
-      title: 'Profit Net',
-      value: `${netProfit.toLocaleString()} RON`,
-      icon: DollarSign,
-      color: netProfit >= 0 ? 'text-green-400' : 'text-red-400',
-      bg: netProfit >= 0 ? 'bg-green-500/20' : 'bg-red-500/20',
-      change: netProfit >= 0 ? '+15.3%' : '-5.2%',
-      changeColor: netProfit >= 0 ? 'text-green-400' : 'text-red-400'
+      title: 'Rata Colectare',
+      value: `${invoiceCollectionRate.toFixed(1)}%`,
+      trend: invoiceCollectionRate >= 90 ? 'up' : invoiceCollectionRate >= 70 ? 'stable' : 'down',
+      color: invoiceCollectionRate >= 90 ? 'text-green-400' : invoiceCollectionRate >= 70 ? 'text-yellow-400' : 'text-red-400',
+      bg: invoiceCollectionRate >= 90 ? 'bg-green-500/20' : invoiceCollectionRate >= 70 ? 'bg-yellow-500/20' : 'bg-red-500/20',
+      icon: Calculator,
+      description: 'Eficiența colectării facturilor'
     },
     {
-      title: 'Rata Reconciliere',
+      title: 'Reconciliere',
       value: `${reconciliationRate.toFixed(1)}%`,
-      icon: CheckCircle,
-      color: 'text-blue-400',
-      bg: 'bg-blue-500/20',
-      change: '+3.1%',
-      changeColor: 'text-blue-400'
+      trend: reconciliationRate >= 85 ? 'up' : reconciliationRate >= 60 ? 'stable' : 'down',
+      color: reconciliationRate >= 85 ? 'text-green-400' : reconciliationRate >= 60 ? 'text-yellow-400' : 'text-red-400',
+      bg: reconciliationRate >= 85 ? 'bg-green-500/20' : reconciliationRate >= 60 ? 'bg-yellow-500/20' : 'bg-red-500/20',
+      icon: Card,
+      description: 'Acuratețea reconcilierii bancare'
     }
   ];
 
-  const moduleStats = [
-    {
-      title: 'Documente',
-      value: completedDocuments.length,
-      total: documents.length,
-      icon: FileText,
-      color: 'text-blue-400',
-      bg: 'bg-blue-500/20',
-      processing: processingDocuments.length
-    },
-    {
-      title: 'Contracte',
-      value: activeContracts,
-      total: contracts.length,
-      icon: FileContract,
-      color: 'text-purple-400',
-      bg: 'bg-purple-500/20',
-      expiring: expiringSoonContracts
-    },
-    {
-      title: 'Facturi',
-      value: paidInvoices,
-      total: invoices.length,
-      icon: Building,
-      color: 'text-indigo-400',
-      bg: 'bg-indigo-500/20',
-      overdue: overdueInvoices
-    },
-    {
-      title: 'Produse',
-      value: products.length - lowStockProducts,
-      total: products.length,
-      icon: Package,
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-500/20',
-      lowStock: lowStockProducts
-    },
-    {
-      title: 'Extrase Bancare',
-      value: bankStatements.filter(s => s.status === 'completed').length,
-      total: bankStatements.length,
-      icon: Banknote,
-      color: 'text-cyan-400',
-      bg: 'bg-cyan-500/20',
-      processing: bankStatements.filter(s => s.status === 'processing').length
-    },
-    {
-      title: 'Reconcilieri',
-      value: reconciledTransactions,
-      total: totalBankTransactions,
-      icon: CreditCard,
-      color: 'text-teal-400',
-      bg: 'bg-teal-500/20',
-      pending: totalBankTransactions - reconciledTransactions
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'up': return <ArrowUp className="w-4 h-4 text-green-400" />;
+      case 'down': return <ArrowDown className="w-4 h-4 text-red-400" />;
+      default: return <div className="w-4 h-4" />;
     }
-  ];
+  };
 
   const recentDocuments = completedDocuments.slice(0, 5);
   const recentTransactions = transactions.slice(0, 5);
   const recentContracts = contracts.slice(0, 3);
 
-  // Quick actions
-  const quickActions = [
-    { label: 'Încarcă Document', icon: FileText, color: 'bg-blue-500', action: 'upload' },
-    { label: 'Contract Nou', icon: FileContract, color: 'bg-purple-500', action: 'contract' },
-    { label: 'Factură Nouă', icon: Building, color: 'bg-indigo-500', action: 'invoice' },
-    { label: 'Extras Bancar', icon: Banknote, color: 'bg-cyan-500', action: 'bank' },
-    { label: 'Raport Fiscal', icon: BarChart3, color: 'bg-green-500', action: 'report' },
-    { label: 'Produs Nou', icon: Package, color: 'bg-emerald-500', action: 'product' }
-  ];
-
   return (
     <div className="p-6 space-y-6">
-      {/* Company Header */}
+      {/* Company Header with Key Metrics */}
       <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">
               {companySettings.name || 'Compania Ta'}
             </h1>
-            <p className="text-gray-400">
-              CUI: {companySettings.cui || 'Necompletat'} • 
-              Activitate: {companySettings.activityCode || 'Nespecificată'}
-            </p>
+            <div className="flex items-center gap-4 text-gray-400">
+              <span>CUI: {companySettings.cui || 'Necompletat'}</span>
+              <span>•</span>
+              <span>Activitate: {companySettings.activityCode || 'Nespecificată'}</span>
+              <span>•</span>
+              <span>Angajați: {companySettings.employees || 1}</span>
+            </div>
           </div>
           <div className="text-right">
-            <p className="text-gray-400 text-sm">Ultima activitate</p>
-            <p className="text-white font-semibold">{new Date().toLocaleDateString('ro-RO')}</p>
+            <div className="flex items-center gap-2 mb-2">
+              <Award className="w-5 h-5 text-yellow-400" />
+              <span className="text-white font-semibold">
+                {profitMargin >= 15 ? 'Performanță Excelentă' : 
+                 profitMargin >= 5 ? 'Performanță Bună' : 'Necesită Atenție'}
+              </span>
+            </div>
+            <p className="text-gray-400 text-sm">Ultima activitate: {new Date().toLocaleDateString('ro-RO')}</p>
+          </div>
+        </div>
+
+        {/* Quick Financial Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white/5 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Venituri Luna</p>
+                <p className="text-xl font-bold text-green-400">
+                  {monthlyData[new Date().getMonth()]?.income.toLocaleString() || 0} RON
+                </p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-green-400" />
+            </div>
+          </div>
+          <div className="bg-white/5 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Cheltuieli Luna</p>
+                <p className="text-xl font-bold text-red-400">
+                  {monthlyData[new Date().getMonth()]?.expenses.toLocaleString() || 0} RON
+                </p>
+              </div>
+              <TrendingDown className="w-8 h-8 text-red-400" />
+            </div>
+          </div>
+          <div className="bg-white/5 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Profit Luna</p>
+                <p className={`text-xl font-bold ${
+                  (monthlyData[new Date().getMonth()]?.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                }`}>
+                  {monthlyData[new Date().getMonth()]?.profit.toLocaleString() || 0} RON
+                </p>
+              </div>
+              <DollarSign className="w-8 h-8 text-blue-400" />
+            </div>
+          </div>
+          <div className="bg-white/5 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Facturi Restante</p>
+                <p className="text-xl font-bold text-orange-400">{overdueInvoices}</p>
+              </div>
+              <AlertTriangle className="w-8 h-8 text-orange-400" />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Stats Grid */}
+      {/* Performance Indicators */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {mainStats.map((stat, index) => (
+        {performanceIndicators.map((indicator, index) => (
           <div key={index} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 ${stat.bg} rounded-xl flex items-center justify-center`}>
-                <stat.icon className={`w-6 h-6 ${stat.color}`} />
+              <div className={`w-12 h-12 ${indicator.bg} rounded-xl flex items-center justify-center`}>
+                <indicator.icon className={`w-6 h-6 ${indicator.color}`} />
               </div>
-              <div className="text-right">
-                <span className={`text-sm font-medium ${stat.changeColor}`}>
-                  {stat.change}
-                </span>
-              </div>
+              {getTrendIcon(indicator.trend)}
             </div>
             <div>
-              <p className="text-gray-400 text-sm font-medium">{stat.title}</p>
-              <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+              <p className="text-gray-400 text-sm font-medium">{indicator.title}</p>
+              <p className={`text-2xl font-bold mt-1 ${indicator.color}`}>{indicator.value}</p>
+              <p className="text-gray-500 text-xs mt-1">{indicator.description}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Processing Alert */}
-      {processingDocuments.length > 0 && (
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-yellow-400" />
-            <span className="text-yellow-400 font-medium">
-              {processingDocuments.length} documente se procesează cu AI...
-            </span>
+      {/* Alerts and Warnings */}
+      {(processingDocuments.length > 0 || expiringSoonContracts > 0 || overdueInvoices > 0 || lowStockProducts > 0) && (
+        <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20 rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <AlertTriangle className="w-6 h-6 text-orange-400" />
+            <h3 className="text-xl font-semibold text-orange-400">Atenție Necesară</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {processingDocuments.length > 0 && (
+              <div className="bg-white/5 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="w-4 h-4 text-yellow-400" />
+                  <span className="text-yellow-400 font-medium">Documente în procesare</span>
+                </div>
+                <p className="text-white text-lg font-bold">{processingDocuments.length}</p>
+              </div>
+            )}
+            {expiringSoonContracts > 0 && (
+              <div className="bg-white/5 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Timer className="w-4 h-4 text-orange-400" />
+                  <span className="text-orange-400 font-medium">Contracte expiră curând</span>
+                </div>
+                <p className="text-white text-lg font-bold">{expiringSoonContracts}</p>
+              </div>
+            )}
+            {overdueInvoices > 0 && (
+              <div className="bg-white/5 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="w-4 h-4 text-red-400" />
+                  <span className="text-red-400 font-medium">Facturi restante</span>
+                </div>
+                <p className="text-white text-lg font-bold">{overdueInvoices}</p>
+                <p className="text-red-300 text-sm">{overdueInvoiceValue.toLocaleString()} RON</p>
+              </div>
+            )}
+            {lowStockProducts > 0 && (
+              <div className="bg-white/5 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Package className="w-4 h-4 text-red-400" />
+                  <span className="text-red-400 font-medium">Stoc scăzut</span>
+                </div>
+                <p className="text-white text-lg font-bold">{lowStockProducts}</p>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Module Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {moduleStats.map((module, index) => (
-          <div key={index} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-10 h-10 ${module.bg} rounded-xl flex items-center justify-center`}>
-                <module.icon className={`w-5 h-5 ${module.color}`} />
+      {/* Financial Analysis Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Monthly Trend */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Evoluție Financiară {currentYear}
+            </h3>
+            <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                <span className="text-gray-400">Venituri</span>
               </div>
-              <div className="text-right">
-                <span className="text-2xl font-bold text-white">{module.value}</span>
-                <span className="text-gray-400">/{module.total}</span>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                <span className="text-gray-400">Cheltuieli</span>
               </div>
-            </div>
-            <h3 className="text-white font-semibold mb-2">{module.title}</h3>
-            <div className="space-y-1">
-              {module.processing !== undefined && module.processing > 0 && (
-                <p className="text-yellow-400 text-sm">
-                  <Clock className="w-3 h-3 inline mr-1" />
-                  {module.processing} în procesare
-                </p>
-              )}
-              {module.expiring !== undefined && module.expiring > 0 && (
-                <p className="text-orange-400 text-sm">
-                  <AlertTriangle className="w-3 h-3 inline mr-1" />
-                  {module.expiring} expiră curând
-                </p>
-              )}
-              {module.overdue !== undefined && module.overdue > 0 && (
-                <p className="text-red-400 text-sm">
-                  <AlertTriangle className="w-3 h-3 inline mr-1" />
-                  {module.overdue} întârziate
-                </p>
-              )}
-              {module.lowStock !== undefined && module.lowStock > 0 && (
-                <p className="text-red-400 text-sm">
-                  <AlertTriangle className="w-3 h-3 inline mr-1" />
-                  {module.lowStock} stoc scăzut
-                </p>
-              )}
-              {module.pending !== undefined && module.pending > 0 && (
-                <p className="text-gray-400 text-sm">
-                  <Clock className="w-3 h-3 inline mr-1" />
-                  {module.pending} în așteptare
-                </p>
-              )}
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                <span className="text-gray-400">Profit</span>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {monthlyData.map((data, index) => {
+              const maxValue = Math.max(...monthlyData.map(d => Math.max(d.income, d.expenses, Math.abs(d.profit))));
+              return (
+                <div key={index} className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-gray-300 font-medium">{data.month}</span>
+                    <span className={`font-semibold ${data.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {data.profit >= 0 ? '+' : ''}{data.profit.toLocaleString()} RON
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 text-xs text-gray-400">Venituri</div>
+                      <div className="flex-1 bg-gray-700 rounded-full h-2">
+                        <div 
+                          className="bg-green-400 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${maxValue > 0 ? (data.income / maxValue) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                      <div className="w-20 text-xs text-green-400 text-right">
+                        {data.income.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 text-xs text-gray-400">Cheltuieli</div>
+                      <div className="flex-1 bg-gray-700 rounded-full h-2">
+                        <div 
+                          className="bg-red-400 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${maxValue > 0 ? (data.expenses / maxValue) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                      <div className="w-20 text-xs text-red-400 text-right">
+                        {data.expenses.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-          <Zap className="w-5 h-5" />
-          Acțiuni Rapide
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {quickActions.map((action, index) => (
-            <button
-              key={index}
-              className="flex flex-col items-center gap-3 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all duration-300 group"
-            >
-              <div className={`w-12 h-12 ${action.color} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                <action.icon className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-white text-sm font-medium text-center">{action.label}</span>
-            </button>
-          ))}
+        {/* Category Analysis */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+          <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+            <PieChart className="w-5 h-5" />
+            Analiza pe Categorii
+          </h3>
+          <div className="space-y-4">
+            {topCategories.map(([category, data], index) => {
+              const percentage = totalIncome + totalExpenses > 0 ? (data.total / (totalIncome + totalExpenses)) * 100 : 0;
+              return (
+                <div key={category} className="p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-white font-medium">{category}</span>
+                    <span className="text-gray-400 text-sm font-semibold">
+                      {percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-400">Venituri: {data.income.toLocaleString()} RON</span>
+                      <span className="text-red-400">Cheltuieli: {data.expenses.toLocaleString()} RON</span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-green-400 to-blue-400 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-white font-semibold">
+                        Total: {data.total.toLocaleString()} RON
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
+      {/* Business Overview Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Invoice Status */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <Building className="w-5 h-5" />
+            Status Facturi
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-400" />
+                <span className="text-green-400 font-medium">Plătite</span>
+              </div>
+              <div className="text-right">
+                <p className="text-green-400 font-bold">{paidInvoices}</p>
+                <p className="text-green-300 text-sm">{paidInvoiceValue.toLocaleString()} RON</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+              <div className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-blue-400" />
+                <span className="text-blue-400 font-medium">În așteptare</span>
+              </div>
+              <div className="text-right">
+                <p className="text-blue-400 font-bold">{pendingInvoices}</p>
+                <p className="text-blue-300 text-sm">
+                  {(totalInvoiceValue - paidInvoiceValue - overdueInvoiceValue).toLocaleString()} RON
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-400" />
+                <span className="text-red-400 font-medium">Restante</span>
+              </div>
+              <div className="text-right">
+                <p className="text-red-400 font-bold">{overdueInvoices}</p>
+                <p className="text-red-300 text-sm">{overdueInvoiceValue.toLocaleString()} RON</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Contract Overview */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <FileContract className="w-5 h-5" />
+            Contracte Active
+          </h3>
+          <div className="space-y-3">
+            {recentContracts.map((contract) => (
+              <div key={contract.id} className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <FileContract className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white font-medium text-sm truncate">
+                      {contract.title || contract.number}
+                    </p>
+                    <p className="text-gray-400 text-xs">{contract.clientName}</p>
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-400">
+                    Expirare: {contract.endDate.toLocaleDateString('ro-RO')}
+                  </span>
+                  <span className="text-green-400 font-semibold">
+                    {contract.value.toLocaleString()} RON
+                  </span>
+                </div>
+              </div>
+            ))}
+            {recentContracts.length === 0 && (
+              <p className="text-gray-400 text-center py-8">Nu există contracte active</p>
+            )}
+          </div>
+        </div>
+
+        {/* Key Metrics Summary */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <Target className="w-5 h-5" />
+            Indicatori Cheie
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Valoare medie tranzacție:</span>
+              <span className="text-white font-semibold">{averageTransactionValue.toLocaleString()} RON</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Valoare contracte:</span>
+              <span className="text-blue-400 font-semibold">{totalContractValue.toLocaleString()} RON</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Valoare inventar:</span>
+              <span className="text-emerald-400 font-semibold">{totalInventoryValue.toLocaleString()} RON</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Documente procesate:</span>
+              <span className="text-cyan-400 font-semibold">{completedDocuments.length}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Rata reconciliere:</span>
+              <span className="text-purple-400 font-semibold">{reconciliationRate.toFixed(1)}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Documents */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
@@ -364,7 +624,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <p className={`text-sm font-medium ${
                     transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
                   }`}>
-                    {transaction.type === 'expense' ? '-' : '+'}{transaction.amount} RON
+                    {transaction.type === 'expense' ? '-' : '+'}{transaction.amount.toLocaleString()} RON
                   </p>
                   <p className="text-gray-400 text-xs">
                     {transaction.date.toLocaleDateString('ro-RO')}
@@ -379,100 +639,49 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Recent Contracts */}
+      {/* Quick Actions */}
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-            <FileContract className="w-5 h-5" />
-            Contracte Active
-          </h3>
-          <button className="text-blue-400 hover:text-blue-300 transition-colors">
-            <Eye className="w-4 h-4" />
+        <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+          <Zap className="w-5 h-5" />
+          Acțiuni Rapide
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <button className="flex flex-col items-center gap-3 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all duration-300 group">
+            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <FileText className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-white text-sm font-medium text-center">Încarcă Document</span>
           </button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {recentContracts.map((contract) => (
-            <div key={contract.id} className="p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                  <FileContract className="w-5 h-5 text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-white font-medium text-sm">{contract.title || contract.number}</p>
-                  <p className="text-gray-400 text-xs">{contract.clientName}</p>
-                </div>
-              </div>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Valoare:</span>
-                  <span className="text-green-400 font-semibold">{contract.value.toLocaleString()} RON</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Expirare:</span>
-                  <span className="text-white">{contract.endDate.toLocaleDateString('ro-RO')}</span>
-                </div>
-              </div>
+          <button className="flex flex-col items-center gap-3 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all duration-300 group">
+            <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <FileContract className="w-6 h-6 text-white" />
             </div>
-          ))}
-          {recentContracts.length === 0 && (
-            <p className="text-gray-400 text-center py-8 col-span-3">Nu există contracte active</p>
-          )}
-        </div>
-      </div>
-
-      {/* Financial Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Category Breakdown */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-          <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
-            Breakdown pe Categorii
-          </h3>
-          <div className="space-y-3">
-            {Object.entries(
-              transactions.reduce((acc, transaction) => {
-                acc[transaction.category] = (acc[transaction.category] || 0) + Math.abs(transaction.amount);
-                return acc;
-              }, {} as Record<string, number>)
-            ).slice(0, 5).map(([category, amount]) => (
-              <div key={category} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                <span className="text-gray-300 font-medium">{category}</span>
-                <span className="text-white font-semibold">{amount.toLocaleString()} RON</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Key Metrics */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-          <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <Target className="w-5 h-5" />
-            Indicatori Cheie
-          </h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Marja de profit:</span>
-              <span className={`font-semibold ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {totalIncome > 0 ? ((netProfit / totalIncome) * 100).toFixed(1) : 0}%
-              </span>
+            <span className="text-white text-sm font-medium text-center">Contract Nou</span>
+          </button>
+          <button className="flex flex-col items-center gap-3 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all duration-300 group">
+            <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Building className="w-6 h-6 text-white" />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Valoare contracte:</span>
-              <span className="text-blue-400 font-semibold">{totalContractValue.toLocaleString()} RON</span>
+            <span className="text-white text-sm font-medium text-center">Factură Nouă</span>
+          </button>
+          <button className="flex flex-col items-center gap-3 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all duration-300 group">
+            <div className="w-12 h-12 bg-cyan-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Banknote className="w-6 h-6 text-white" />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Valoare facturi:</span>
-              <span className="text-indigo-400 font-semibold">{totalInvoiceValue.toLocaleString()} RON</span>
+            <span className="text-white text-sm font-medium text-center">Extras Bancar</span>
+          </button>
+          <button className="flex flex-col items-center gap-3 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all duration-300 group">
+            <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <BarChart3 className="w-6 h-6 text-white" />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Valoare inventar:</span>
-              <span className="text-emerald-400 font-semibold">{totalInventoryValue.toLocaleString()} RON</span>
+            <span className="text-white text-sm font-medium text-center">Raport Fiscal</span>
+          </button>
+          <button className="flex flex-col items-center gap-3 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all duration-300 group">
+            <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Package className="w-6 h-6 text-white" />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Rata reconciliere:</span>
-              <span className="text-cyan-400 font-semibold">{reconciliationRate.toFixed(1)}%</span>
-            </div>
-          </div>
+            <span className="text-white text-sm font-medium text-center">Produs Nou</span>
+          </button>
         </div>
       </div>
     </div>
