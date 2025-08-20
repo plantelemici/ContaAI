@@ -55,21 +55,21 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
   };
 
   return (
-    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:border-white/20 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 group transform hover:-translate-y-1">
+    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4 hover:bg-white/10 hover:border-white/20 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 group transform hover:-translate-y-1">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-3">
-          <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center border border-blue-500/20">
-            <FileText className="w-7 h-7 text-blue-400" />
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center border border-blue-500/20">
+            <FileText className="w-5 h-5 text-blue-400" />
           </div>
           <div>
-            <h3 className="text-white font-semibold text-base truncate max-w-[200px] mb-1">
+            <h3 className="text-white font-semibold text-sm truncate max-w-[180px] mb-1">
               {document.fileName}
             </h3>
             <div className="flex items-center gap-2">
-              <p className="text-gray-400 text-sm">{document.fileSize}</p>
+              <p className="text-gray-400 text-xs">{document.fileSize}</p>
               <span className="w-1 h-1 bg-gray-500 rounded-full"></span>
-              <p className="text-gray-400 text-sm">{document.uploadedAt.toLocaleDateString('ro-RO')}</p>
+              <p className="text-gray-400 text-xs">{document.uploadedAt.toLocaleDateString('ro-RO')}</p>
             </div>
           </div>
         </div>
@@ -98,13 +98,13 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
       </div>
 
       {/* Category and Status */}
-      <div className="flex items-center justify-between mb-6">
-        <span className={`px-4 py-2 rounded-xl text-sm font-semibold ${getCategoryColor(document.category)}`}>
+      <div className="flex items-center justify-between mb-4">
+        <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${getCategoryColor(document.category)}`}>
           {document.category || 'Necategorizat'}
         </span>
-        <div className="flex items-center gap-3 px-3 py-2 bg-white/5 rounded-xl">
+        <div className="flex items-center gap-2 px-2 py-1 bg-white/5 rounded-lg">
           {getStatusIcon()}
-          <span className="text-sm font-medium text-gray-300">{getStatusText()}</span>
+          <span className="text-xs font-medium text-gray-300">{getStatusText()}</span>
         </div>
       </div>
 
@@ -113,12 +113,12 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
         <div className="space-y-6">
       {/* AI Analysis */}
       {document.geminiAnalysis > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-3 p-3 bg-green-500/10 rounded-xl border border-green-500/20">
-            <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <Eye className="w-4 h-4 text-green-400" />
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+            <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
+              <Eye className="w-3 h-3 text-green-400" />
             </div>
-            <span className="text-sm font-medium text-green-400">
+            <span className="text-xs font-medium text-green-400">
               Analizat cu Gemini AI ({document.geminiAnalysis}%)
             </span>
           </div>
@@ -127,33 +127,27 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
 
       {/* Document Details */}
       {document.status === 'completed' && (
-        <div className="space-y-3 mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-400 text-sm">Furnizor:</span>
-            <span className="text-white text-sm font-semibold">{document.supplier}</span>
+        <div className="space-y-2 mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-gray-400">Furnizor:</span>
+            <span className="text-white font-semibold truncate max-w-[120px]">{document.supplier}</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-400 text-sm">Suma:</span>
-            <span className="text-green-400 text-sm font-bold">{document.amount}</span>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-gray-400">Suma:</span>
+            <span className="text-green-400 font-bold">{document.amount}</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-400 text-sm">Client:</span>
-            <span className="text-white text-sm font-semibold">{document.client}</span>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-gray-400">Client:</span>
+            <span className="text-white font-semibold truncate max-w-[120px]">{document.client}</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-400 text-sm">Data document:</span>
-            <span className="text-white text-sm font-semibold">{document.documentDate}</span>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-gray-400">Data:</span>
+            <span className="text-white font-semibold">{document.documentDate}</span>
           </div>
           {document.invoiceNumber && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Nr. Factură:</span>
-              <span className="text-blue-400 text-sm font-semibold">{document.invoiceNumber}</span>
-            </div>
-          )}
-          {document.cui && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">CUI:</span>
-              <span className="text-white text-sm font-semibold">{document.cui}</span>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-400">Nr. Factură:</span>
+              <span className="text-blue-400 font-semibold">{document.invoiceNumber}</span>
             </div>
           )}
         </div>
@@ -161,24 +155,24 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
 
       {/* Description */}
       {document.description && (
-        <div className="mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
-          <span className="text-gray-400 text-sm font-medium mb-2 block">Descriere:</span>
-          <p className="text-white text-sm leading-relaxed">{document.description}</p>
+        <div className="mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
+          <span className="text-gray-400 text-xs font-medium mb-1 block">Descriere:</span>
+          <p className="text-white text-xs leading-relaxed line-clamp-2">{document.description}</p>
         </div>
       )}
 
       {/* AI Insights */}
       {document.aiInsights.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-3 p-3 bg-orange-500/10 rounded-xl border border-orange-500/20">
-            <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-              <Brain className="w-4 h-4 text-orange-400" />
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2 p-2 bg-orange-500/10 rounded-lg border border-orange-500/20">
+            <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+              <Brain className="w-3 h-3 text-orange-400" />
             </div>
-            <span className="text-sm text-orange-400 font-semibold">AI Insights</span>
+            <span className="text-xs text-orange-400 font-semibold">AI Insights</span>
           </div>
-          <ul className="space-y-2 pl-4">
-            {document.aiInsights.map((insight, index) => (
-              <li key={index} className="text-sm text-gray-300 flex items-start gap-3">
+          <ul className="space-y-1 pl-3">
+            {document.aiInsights.slice(0, 2).map((insight, index) => (
+              <li key={index} className="text-xs text-gray-300 flex items-start gap-2">
                 <span className="text-orange-400 text-lg leading-none">•</span>
                 {insight}
               </li>
@@ -189,16 +183,16 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
 
       {/* Recommendations */}
       {document.recommendations.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-3 p-3 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-            <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-              <Lightbulb className="w-4 h-4 text-yellow-400" />
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2 p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+            <div className="w-6 h-6 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+              <Lightbulb className="w-3 h-3 text-yellow-400" />
             </div>
-            <span className="text-sm text-yellow-400 font-semibold">Recomandări</span>
+            <span className="text-xs text-yellow-400 font-semibold">Recomandări</span>
           </div>
-          <ul className="space-y-2 pl-4">
-            {document.recommendations.map((rec, index) => (
-              <li key={index} className="text-sm text-gray-300 flex items-start gap-3">
+          <ul className="space-y-1 pl-3">
+            {document.recommendations.slice(0, 2).map((rec, index) => (
+              <li key={index} className="text-xs text-gray-300 flex items-start gap-2">
                 <span className="text-yellow-400 text-lg leading-none">•</span>
                 {rec}
               </li>
@@ -210,18 +204,18 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
       {/* Generated Transactions */}
       {document.generatedTransactions.length > 0 && (
         <div>
-          <div className="flex items-center gap-3 mb-4 p-3 bg-green-500/10 rounded-xl border border-green-500/20">
-            <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-4 h-4 text-green-400" />
+          <div className="flex items-center gap-2 mb-3 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+            <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-3 h-3 text-green-400" />
             </div>
-            <span className="text-sm text-green-400 font-semibold">Tranzacții generate</span>
+            <span className="text-xs text-green-400 font-semibold">Tranzacții generate</span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {document.generatedTransactions.map((transaction) => (
-              <div key={transaction.id} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors">
+              <div key={transaction.id} className="bg-white/5 border border-white/10 rounded-lg p-3 hover:bg-white/10 transition-colors">
                 <div className="flex justify-between items-center">
-                  <span className="text-white text-sm font-medium">{transaction.description}</span>
-                  <span className={`text-sm font-bold px-3 py-1 rounded-lg ${
+                  <span className="text-white text-xs font-medium truncate max-w-[120px]">{transaction.description}</span>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-lg ${
                     transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
                   }`}>
                     {transaction.type === 'expense' ? '-' : '+'}{transaction.amount} RON

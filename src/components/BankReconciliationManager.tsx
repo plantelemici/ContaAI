@@ -296,7 +296,7 @@ export const BankReconciliationManager: React.FC<BankReconciliationManagerProps>
       )}
 
       {/* Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
         {activeTab === 'statements' && bankStatements.map((statement) => (
           <BankStatementCard 
             key={statement.id} 

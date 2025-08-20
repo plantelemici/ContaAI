@@ -37,7 +37,8 @@ interface MenuItem {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) => {
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['main', 'financial']);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['main', 'documents', 'financial']);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => 
@@ -98,32 +99,42 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) =>
       <button
         key={item.id}
         onClick={() => onViewChange(item.id)}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${
+        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group relative ${
           isActive
             ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white shadow-lg backdrop-blur-sm border border-blue-500/30'
-            : 'text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1'
-        } ${isChild ? 'ml-4 py-2' : ''}`}
+            : 'text-gray-300 hover:bg-white/5 hover:text-white'
+        } ${isChild ? 'ml-3 py-1' : ''}`}
+        title={isCollapsed ? item.label : undefined}
       >
         <div className={`w-5 h-5 flex items-center justify-center ${
           isActive ? item.color || 'text-blue-400' : 'text-gray-400 group-hover:text-white'
         }`}>
           <item.icon className="w-5 h-5" />
         </div>
-        <span className={`font-medium flex-1 text-left ${isChild ? 'text-sm' : ''}`}>
-          {item.label}
-        </span>
-        {item.count !== null && item.count !== undefined && (
-          <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-            isActive 
-              ? 'bg-blue-500/30 text-blue-200' 
-              : 'bg-white/10 text-gray-300 group-hover:bg-white/20 group-hover:text-white'
-          }`}>
-            {item.count}
-          </span>
+        {!isCollapsed && (
+          <>
+            <span className={`font-medium flex-1 text-left text-sm ${isChild ? 'text-xs' : ''}`}>
+              {item.label}
+            </span>
+            {item.count !== null && item.count !== undefined && (
+              <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                isActive 
+                  ? 'bg-blue-500/30 text-blue-200' 
+                  : 'bg-white/10 text-gray-300 group-hover:bg-white/20 group-hover:text-white'
+              }`}>
+                {item.count}
+              </span>
+            )}
+            {item.badge && (
+              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                {item.badge}
+              </span>
+            )}
+          </>
         )}
-        {item.badge && (
-          <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
-            {item.badge}
+        {isCollapsed && item.count !== null && item.count !== undefined && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+            {item.count > 99 ? '99+' : item.count}
           </span>
         )}
       </button>
@@ -131,48 +142,66 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) =>
   };
 
   return (
-    <div className="w-72 h-full bg-black/20 backdrop-blur-xl border-r border-white/10 flex flex-col">
+    <div className={`${isCollapsed ? 'w-16' : 'w-64'} h-full bg-black/20 backdrop-blur-xl border-r border-white/10 flex flex-col transition-all duration-300`}>
       {/* Header */}
-      <div className="p-6 border-b border-white/10">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-            <Briefcase className="w-7 h-7 text-white" />
+      <div className={`${isCollapsed ? 'p-3' : 'p-4'} border-b border-white/10`}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+              <Briefcase className="w-5 h-5 text-white" />
+            </div>
+            {!isCollapsed && (
+              <div>
+                <h1 className="text-xl font-bold text-white">ContaAI</h1>
+                <p className="text-xs text-gray-400">Contabilitate AI</p>
+              </div>
+            )}
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white">ContaAI</h1>
-            <p className="text-sm text-gray-400">Contabilitate Inteligentă</p>
-          </div>
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            )}
+          </button>
         </div>
-        <div className="mt-4 p-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-green-400 text-sm font-medium">Sistem Activ</span>
+        {!isCollapsed && (
+          <div className="mt-3 p-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-green-400 text-xs font-medium">Sistem Activ</span>
+            </div>
+            <p className="text-gray-400 text-xs">AI procesează documentele</p>
           </div>
-          <p className="text-gray-400 text-xs">AI procesează documentele</p>
-        </div>
+        )}
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-3 space-y-4">
         {menuGroups.map((group) => {
           const isExpanded = expandedGroups.includes(group.id);
           
           return (
-            <div key={group.id} className="space-y-2">
-              <button
-                onClick={() => toggleGroup(group.id)}
-                className="w-full flex items-center gap-2 px-2 py-1 text-gray-400 hover:text-white transition-colors text-sm font-semibold uppercase tracking-wider"
-              >
-                {isExpanded ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-                {group.label}
-              </button>
+            <div key={group.id} className="space-y-1">
+              {!isCollapsed && (
+                <button
+                  onClick={() => toggleGroup(group.id)}
+                  className="w-full flex items-center gap-2 px-2 py-1 text-gray-400 hover:text-white transition-colors text-xs font-semibold uppercase tracking-wider"
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="w-3 h-3" />
+                  ) : (
+                    <ChevronRight className="w-3 h-3" />
+                  )}
+                  {group.label}
+                </button>
+              )}
               
-              {isExpanded && (
-                <div className="space-y-1 animate-in slide-in-from-top-2 duration-200">
+              {(isExpanded || isCollapsed) && (
+                <div className="space-y-1">
                   {group.items.map((item) => renderMenuItem(item))}
                 </div>
               )}
@@ -182,24 +211,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) =>
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-white/10">
-        <div className="bg-white/5 rounded-xl p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <Calculator className="w-4 h-4 text-blue-400" />
-            <span className="text-white text-sm font-medium">Statistici Rapide</span>
-          </div>
-          <div className="space-y-1 text-xs">
-            <div className="flex justify-between text-gray-400">
-              <span>Documente procesate:</span>
-              <span className="text-green-400 font-semibold">127</span>
+      {!isCollapsed && (
+        <div className="p-3 border-t border-white/10">
+          <div className="bg-white/5 rounded-lg p-2">
+            <div className="flex items-center gap-2 mb-2">
+              <Calculator className="w-3 h-3 text-blue-400" />
+              <span className="text-white text-xs font-medium">Statistici</span>
             </div>
-            <div className="flex justify-between text-gray-400">
-              <span>Această lună:</span>
-              <span className="text-blue-400 font-semibold">23</span>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between text-gray-400">
+                <span>Procesate:</span>
+                <span className="text-green-400 font-semibold">127</span>
+              </div>
+              <div className="flex justify-between text-gray-400">
+                <span>Luna aceasta:</span>
+                <span className="text-blue-400 font-semibold">23</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
