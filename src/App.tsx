@@ -80,10 +80,15 @@ function App() {
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white mb-2">Încărcare Documente</h2>
               <p className="text-gray-400">
-                Încarcă facturi, bonuri și documente contabile pentru procesare automată cu AI
+                Încarcă facturi, contracte, extrase bancare și alte documente pentru procesare automată cu AI
               </p>
             </div>
-            <FileUpload onFileUpload={processDocument} isProcessing={isProcessing} />
+            <FileUpload 
+              onFileUpload={processDocument} 
+              onContractUpload={processContract}
+              onBankStatementUpload={processBankStatement}
+              isProcessing={isProcessing || isProcessingContract || isProcessingBank} 
+            />
           </div>
         );
       
@@ -198,6 +203,7 @@ function App() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4 gap-6">
               {filteredAndSortedDocuments.map((document) => (
                 <DocumentCard key={document.id} document={document} />
               ))}

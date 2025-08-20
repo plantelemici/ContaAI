@@ -55,21 +55,21 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
   };
 
   return (
-    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:border-white/20 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 group transform hover:-translate-y-1">
+    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4 hover:bg-white/10 hover:border-white/20 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 group transform hover:-translate-y-1">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-3">
-          <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center border border-blue-500/20">
-            <FileText className="w-7 h-7 text-blue-400" />
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center border border-blue-500/20">
+            <FileText className="w-5 h-5 text-blue-400" />
           </div>
           <div>
-            <h3 className="text-white font-semibold text-base truncate max-w-[200px] mb-1">
+            <h3 className="text-white font-semibold text-sm truncate max-w-[150px] mb-1">
               {document.fileName}
             </h3>
             <div className="flex items-center gap-2">
-              <p className="text-gray-400 text-sm">{document.fileSize}</p>
+              <p className="text-gray-400 text-xs">{document.fileSize}</p>
               <span className="w-1 h-1 bg-gray-500 rounded-full"></span>
-              <p className="text-gray-400 text-sm">{document.uploadedAt.toLocaleDateString('ro-RO')}</p>
+              <p className="text-gray-400 text-xs">{document.uploadedAt.toLocaleDateString('ro-RO')}</p>
             </div>
           </div>
         </div>
@@ -98,7 +98,7 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
       </div>
 
       {/* Category and Status */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <span className={`px-4 py-2 rounded-xl text-sm font-semibold ${getCategoryColor(document.category)}`}>
           {document.category || 'Necategorizat'}
         </span>
@@ -111,14 +111,14 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
       {/* Collapsible Content */}
       {isExpanded && (
         <div className="space-y-6">
-      {/* AI Analysis */}
+      {/* AI Analysis - Compressed */}
       {document.geminiAnalysis > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-3 p-3 bg-green-500/10 rounded-xl border border-green-500/20">
-            <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <Eye className="w-4 h-4 text-green-400" />
+        <div className="mb-4">
+          <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+            <div className="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center">
+              <Eye className="w-3 h-3 text-green-400" />
             </div>
-            <span className="text-sm font-medium text-green-400">
+            <span className="text-xs font-medium text-green-400">
               Analizat cu Gemini AI ({document.geminiAnalysis}%)
             </span>
           </div>
@@ -127,33 +127,33 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
 
       {/* Document Details */}
       {document.status === 'completed' && (
-        <div className="space-y-3 mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
+        <div className="space-y-2 mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
           <div className="flex justify-between items-center">
-            <span className="text-gray-400 text-sm">Furnizor:</span>
-            <span className="text-white text-sm font-semibold">{document.supplier}</span>
+            <span className="text-gray-400 text-xs">Furnizor:</span>
+            <span className="text-white text-xs font-semibold">{document.supplier}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-400 text-sm">Suma:</span>
-            <span className="text-green-400 text-sm font-bold">{document.amount}</span>
+            <span className="text-gray-400 text-xs">Suma:</span>
+            <span className="text-green-400 text-xs font-bold">{document.amount}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-400 text-sm">Client:</span>
-            <span className="text-white text-sm font-semibold">{document.client}</span>
+            <span className="text-gray-400 text-xs">Client:</span>
+            <span className="text-white text-xs font-semibold">{document.client}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-400 text-sm">Data document:</span>
-            <span className="text-white text-sm font-semibold">{document.documentDate}</span>
+            <span className="text-gray-400 text-xs">Data document:</span>
+            <span className="text-white text-xs font-semibold">{document.documentDate}</span>
           </div>
           {document.invoiceNumber && (
             <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Nr. Factură:</span>
-              <span className="text-blue-400 text-sm font-semibold">{document.invoiceNumber}</span>
+              <span className="text-gray-400 text-xs">Nr. Factură:</span>
+              <span className="text-blue-400 text-xs font-semibold">{document.invoiceNumber}</span>
             </div>
           )}
           {document.cui && (
             <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">CUI:</span>
-              <span className="text-white text-sm font-semibold">{document.cui}</span>
+              <span className="text-gray-400 text-xs">CUI:</span>
+              <span className="text-white text-xs font-semibold">{document.cui}</span>
             </div>
           )}
         </div>
@@ -161,9 +161,9 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
 
       {/* Description */}
       {document.description && (
-        <div className="mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
-          <span className="text-gray-400 text-sm font-medium mb-2 block">Descriere:</span>
-          <p className="text-white text-sm leading-relaxed">{document.description}</p>
+        <div className="mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
+          <span className="text-gray-400 text-xs font-medium mb-1 block">Descriere:</span>
+          <p className="text-white text-xs leading-relaxed">{document.description}</p>
         </div>
       )}
 

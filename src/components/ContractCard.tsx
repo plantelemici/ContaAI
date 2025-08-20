@@ -112,21 +112,21 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, onLinkInvo
   };
 
   return (
-    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:border-white/20 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 group transform hover:-translate-y-1">
+    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4 hover:bg-white/10 hover:border-white/20 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 group transform hover:-translate-y-1">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-3">
-          <div className="w-14 h-14 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center border border-purple-500/20">
-            <FileText className="w-7 h-7 text-purple-400" />
+          <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-xl flex items-center justify-center border border-purple-500/20">
+            <FileText className="w-5 h-5 text-purple-400" />
           </div>
           <div>
-            <h3 className="text-white font-semibold text-base mb-1">
+            <h3 className="text-white font-semibold text-sm mb-1">
               {contract.title || contract.number}
             </h3>
             <div className="flex items-center gap-2">
-              <p className="text-gray-400 text-sm">{contract.number}</p>
+              <p className="text-gray-400 text-xs">{contract.number}</p>
               <span className="w-1 h-1 bg-gray-500 rounded-full"></span>
-              <p className="text-gray-400 text-sm">{contract.createdAt.toLocaleDateString('ro-RO')}</p>
+              <p className="text-gray-400 text-xs">{contract.createdAt.toLocaleDateString('ro-RO')}</p>
             </div>
           </div>
         </div>
@@ -163,7 +163,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, onLinkInvo
       </div>
 
       {/* Type and Status */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <span className={`px-4 py-2 rounded-xl text-sm font-semibold ${getTypeColor(contract.type)}`}>
           {getTypeText(contract.type)}
         </span>
@@ -175,10 +175,10 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, onLinkInvo
 
       {/* Expiring Soon Alert */}
       {isExpiringSoon() && (
-        <div className="mb-6 p-3 bg-orange-500/10 rounded-xl border border-orange-500/20">
+        <div className="mb-4 p-2 bg-orange-500/10 rounded-lg border border-orange-500/20">
           <div className="flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-orange-400" />
-            <span className="text-sm font-medium text-orange-400">
+            <AlertTriangle className="w-4 h-4 text-orange-400" />
+            <span className="text-xs font-medium text-orange-400">
               Contractul expiră în curând!
             </span>
           </div>
@@ -188,14 +188,14 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, onLinkInvo
       {/* Collapsible Content */}
       {isExpanded && (
         <div className="space-y-6">
-      {/* AI Analysis */}
+      {/* AI Analysis - Compressed */}
       {contract.geminiAnalysis.confidence > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-3 p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
-            <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              <Brain className="w-4 h-4 text-purple-400" />
+        <div className="mb-4">
+          <div className="flex items-center gap-2 p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
+            <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center">
+              <Brain className="w-3 h-3 text-purple-400" />
             </div>
-            <span className="text-sm font-medium text-purple-400">
+            <span className="text-xs font-medium text-purple-400">
               Analizat cu Gemini AI ({contract.geminiAnalysis.confidence}%)
             </span>
           </div>
@@ -203,42 +203,42 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, onLinkInvo
       )}
 
       {/* Contract Details */}
-      <div className="space-y-3 mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
+      <div className="space-y-2 mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
         <div className="flex justify-between items-center">
           <span className="text-gray-400 text-sm flex items-center gap-2">
-            <Users className="w-3 h-3" />
+            <Users className="w-2 h-2" />
             Client:
           </span>
-          <span className="text-white text-sm font-semibold">{contract.clientName}</span>
+          <span className="text-white text-xs font-semibold">{contract.clientName}</span>
         </div>
         {contract.supplierName && (
           <div className="flex justify-between items-center">
-            <span className="text-gray-400 text-sm">Furnizor:</span>
-            <span className="text-white text-sm font-semibold">{contract.supplierName}</span>
+            <span className="text-gray-400 text-xs">Furnizor:</span>
+            <span className="text-white text-xs font-semibold">{contract.supplierName}</span>
           </div>
         )}
         <div className="flex justify-between items-center">
           <span className="text-gray-400 text-sm flex items-center gap-2">
-            <DollarSign className="w-3 h-3" />
+            <DollarSign className="w-2 h-2" />
             Valoare:
           </span>
-          <span className="text-green-400 text-sm font-bold">
+          <span className="text-green-400 text-xs font-bold">
             {contract.value.toLocaleString()} {contract.currency}
           </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-gray-400 text-sm flex items-center gap-2">
-            <Calendar className="w-3 h-3" />
+            <Calendar className="w-2 h-2" />
             Perioada:
           </span>
-          <span className="text-white text-sm font-semibold">
+          <span className="text-white text-xs font-semibold">
             {contract.startDate.toLocaleDateString('ro-RO')} - {contract.endDate.toLocaleDateString('ro-RO')}
           </span>
         </div>
         {contract.linkedInvoices.length > 0 && (
           <div className="flex justify-between items-center">
-            <span className="text-gray-400 text-sm">Facturi legate:</span>
-            <span className="text-blue-400 text-sm font-semibold">{contract.linkedInvoices.length}</span>
+            <span className="text-gray-400 text-xs">Facturi legate:</span>
+            <span className="text-blue-400 text-xs font-semibold">{contract.linkedInvoices.length}</span>
           </div>
         )}
       </div>
