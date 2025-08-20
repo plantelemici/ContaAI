@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, Image, FileX, FileContract, CreditCard } from 'lucide-react';
+import { Upload, FileText, Image, FileX, Contact as FileContract, CreditCard } from 'lucide-react';
 
 interface FileUploadProps {
   onFileUpload: (file: File) => void;
